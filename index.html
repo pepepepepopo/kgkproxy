@@ -1,0 +1,1360 @@
+<html><head><base href=".">
+    <title>Interactive URL Loader</title>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    
+    body {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #1e2030, #2a2d43);
+    }
+    
+    .loader-container {
+        width: 90%;
+        max-width: 800px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+    
+    .url-input {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .url-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(96, 239, 255, 0.5);
+        background: white;
+    }
+    
+    .url-input::placeholder {
+        color: #666;
+        font-style: italic;
+    }
+    
+    .loader-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .progress {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #00ff87, #60efff);
+        transition: width 0.3s ease;
+    }
+    
+    .status {
+        margin-top: 1rem;
+        color: white;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+    
+    .animate-progress {
+        animation: progress-animation 2s ease infinite;
+    }
+    
+    @keyframes progress-animation {
+        0% { width: 0%; }
+        50% { width: 100%; }
+        100% { width: 0%; }
+    }
+    
+    .proxy-container {
+        margin-top: 1rem;
+        position: relative;
+        height: 600px;
+    }
+    
+    .proxy-frame {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: 8px;
+        background: white;
+    }
+    
+    .interaction-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        display: none;
+    }
+    
+    .controls {
+        margin: 1rem 0;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .control-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    
+    .control-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    #randomSearchBtn {
+      background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+      font-weight: bold;
+    }
+    
+    #randomSearchBtn:hover {
+      background: linear-gradient(45deg, #ff8e8e, #ff6b6b);
+    }
+    
+    #searchPromptBtn {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        font-weight: bold;
+    }
+    
+    #searchPromptBtn:hover {
+        background: linear-gradient(45deg, #45a049, #4CAF50);
+    }
+    
+    #aiPromptBtn {
+      background: linear-gradient(45deg, #9c27b0, #673ab7);
+      font-weight: bold;
+    }
+    
+    #aiPromptBtn:hover {
+      background: linear-gradient(45deg, #673ab7, #9c27b0);
+    }
+    
+    #typePromptBtn {
+        background: linear-gradient(45deg, #FF5722, #FF9800);
+        font-weight: bold;
+    }
+    
+    #typePromptBtn:hover {
+        background: linear-gradient(45deg, #FF9800, #FF5722);
+    }
+    
+    #clickLinkBtn {
+        background: linear-gradient(45deg, #2196F3, #03A9F4);
+        font-weight: bold;
+    }
+    
+    #clickLinkBtn:hover {
+        background: linear-gradient(45deg, #03A9F4, #2196F3);
+    }
+    
+    #startBtn {
+        background: linear-gradient(45deg, #E91E63, #9C27B0);
+        font-weight: bold;
+    }
+    
+    #startBtn:hover {
+        background: linear-gradient(45deg, #9C27B0, #E91E63);
+    }
+    
+    #startBtn.active {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+    }
+    
+    .custom-script {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 1rem;
+        border-radius: 4px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        display: none;
+    }
+    
+    .history-container {
+        margin-top: 1rem;
+        color: white;
+        font-size: 0.9rem;
+    }
+    
+    .history-item {
+        cursor: pointer;
+        padding: 0.3rem;
+        border-radius: 4px;
+    }
+    
+    .history-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .prompt-input-container {
+        margin-top: 1rem;
+        width: 100%;
+    }
+    
+    .prompt-input {
+        width: 100%;
+        padding: 1rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.9);
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        resize: vertical;
+    }
+    
+    .prompt-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(96, 239, 255, 0.5);
+        background: white;
+    }
+    
+    .download-notification, .bookmark-notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(0, 255, 0, 0.2);
+        padding: 1rem;
+        border-radius: 8px;
+        color: white;
+        display: none;
+    }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    </head>
+    <body>
+        <div class="loader-container">
+            <input type="url" class="url-input" placeholder="Enter website name (e.g. youtube, google) or full URL" required>
+            <div class="loader-bar">
+                <div class="progress"></div>
+            </div>
+            <div class="controls">
+                <button class="control-btn" id="interactBtn">Toggle Interaction</button>
+                <button class="control-btn" id="reloadBtn">Reload Frame</button>
+                <button class="control-btn" id="scriptBtn">Custom Script</button>
+                <button class="control-btn" id="backBtn">Back</button>
+                <button class="control-btn" id="forwardBtn">Forward</button>
+                <button class="control-btn" id="randomSearchBtn">Random Search &amp; Click</button>
+                <button class="control-btn" id="searchPromptBtn">What would you like to search?</button>
+                <button class="control-btn" id="aiPromptBtn">Generate &amp; Execute AI Prompt</button>
+                <button class="control-btn" id="typePromptBtn">Type Custom Prompt</button>
+                <button class="control-btn" id="clickLinkBtn">Click Random Link</button>
+                <button class="control-btn" id="startBtn">Start Auto-Browse</button>
+                <button class="control-btn" id="downloadBtn">Download Page</button>
+                <button class="control-btn" id="bookmarkBtn">Bookmark Page</button>
+            </div>
+            <div class="prompt-input-container" style="display: none;">
+                <textarea class="prompt-input" placeholder="Enter your prompt instructions..." rows="3"></textarea>
+                <button class="control-btn" id="executePromptBtn">Execute Prompt</button>
+            </div>
+            <textarea class="custom-script" placeholder="Enter custom JavaScript to execute in frame..." rows="3"></textarea>
+            <div class="status">Ready to load URL...</div>
+            <div class="proxy-container">
+                <iframe class="proxy-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals" loading="lazy"></iframe>
+                <div class="interaction-overlay"></div>
+            </div>
+            <div class="history-container"></div>
+        </div>
+        <div class="download-notification">Page Downloaded!</div>
+        <div class="bookmark-notification">Page Bookmarked!</div>
+    
+    <script>async function isInappropriate(text) {
+      try {
+        const response = await fetch('/api/ai_completion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            prompt: `Determine if this text contains inappropriate/NSFW content.
+            Return true or false.
+            
+            <typescript-interface>
+            interface Response {
+              inappropriate: boolean;
+            }
+            </typescript-interface>
+            
+            <example>
+            {
+              "inappropriate": false
+            }
+            </example>`,
+            data: text
+          })
+        });
+        const data = await response.json();
+        return data.inappropriate;
+      } catch (err) {
+        console.error('Error checking content:', err);
+        return false;
+      }
+    }
+    async function analyzeInstruction(instruction) {
+      try {
+        const response = await fetch('/api/ai_completion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            prompt: `Analyze this user instruction and break it down into sequential actions.
+            Pay special attention to:
+            - URL/link search commands
+            - Commas which separate different searches
+            - Quotes which indicate search terms
+            - Sequential steps using "then"
+            
+            interface Response {
+              actions: {
+                type: "search" | "click" | "type" | "urlsearch";
+                value: string;
+                confidence: number; 
+                isNewSequence: boolean;
+              }[];
+              intent: string;
+              risk: number;
+            }
+            
+            {
+              "actions": [
+                {
+                  "type": "urlsearch",
+                  "value": "example",
+                  "confidence": 0.9,
+                  "isNewSequence": true
+                }
+              ],
+              "intent": "search urls for example",
+              "risk": 0.1
+            }`,
+            data: instruction
+          })
+        });
+        return await response.json();
+      } catch (err) {
+        console.error('Error analyzing instruction:', err);
+        return null;
+      }
+    }
+    function parseUserInstruction(instruction) {
+      const searches = instruction.split(',').map(s => s.trim());
+      const allActions = [];
+      searches.forEach(search => {
+        const actions = search.split(/\s+then\s+/i).map(action => {
+          const actionLower = action.toLowerCase();
+          let type = 'search';
+          let command = action;
+          if (actionLower.includes('click')) {
+            type = 'click';
+            command = action.toLowerCase().replace('click', '').trim();
+          } else if (actionLower.includes('type')) {
+            type = 'type';
+            command = action.toLowerCase().replace('type', '').trim();
+          }
+          return {
+            type,
+            command
+          };
+        });
+        allActions.push(...actions);
+      });
+      return allActions;
+    }
+    async function findAndTypeIntoElement(frame, text) {
+      const elements = frame.querySelectorAll('input[type="text"], textarea, [contenteditable="true"]');
+      const visibleElements = Array.from(elements).filter(el => {
+        const style = window.getComputedStyle(el);
+        return style.display !== 'none' && style.visibility !== 'hidden';
+      });
+      if (visibleElements.length > 0) {
+        const element = visibleElements[0];
+        element.value = text;
+        element.dispatchEvent(new Event('input'));
+        element.dispatchEvent(new Event('change'));
+        return true;
+      }
+      return false;
+    }
+    async function getRandomSearchAndClick() {
+      try {
+        const response = await fetch('/api/ai_completion', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            prompt: `Generate a random safe search term and link text to click.
+            
+            <typescript-interface>
+            interface Response {
+              searchTerm: string;
+              linkText: string;
+            }
+            </typescript-interface>
+            
+            <example>
+            {
+              "searchTerm": "cute puppies",
+              "linkText": "pictures of dogs"
+            }
+            </example>`,
+            data: ""
+          })
+        });
+        const data = await response.json();
+        return data;
+      } catch (err) {
+        console.error('Error getting random search:', err);
+        return {
+          searchTerm: "cats",
+          linkText: "pictures"
+        };
+      }
+    }
+    async function findAndClickLink(frame) {
+      if (!frame) {
+        document.querySelector('.status').textContent = 'Frame not available';
+        return false;
+      }
+      try {
+        const doc = frame.contentDocument || frame.contentWindow?.document;
+        if (!doc) {
+          document.querySelector('.status').textContent = 'Document not accessible';
+          return false;
+        }
+        const links = Array.from(doc.querySelectorAll('a[href]'));
+        const visibleLinks = links.filter(link => {
+          try {
+            const rect = link.getBoundingClientRect();
+            const style = window.getComputedStyle(link);
+            const href = link.href || '';
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && !href.includes('javascript:void') && href.trim() !== '' && !href.startsWith('#');
+          } catch (e) {
+            return false;
+          }
+        });
+        const assetLinks = visibleLinks.filter(link => {
+          const href = link.href.toLowerCase();
+          const text = link.textContent.toLowerCase();
+          return href.includes('asset') || href.includes('url') || href.includes('public') || text.includes('asset') || text.includes('url') || text.includes('public');
+        });
+        const linkToClick = assetLinks.length > 0 ? assetLinks[Math.floor(Math.random() * assetLinks.length)] : visibleLinks[Math.floor(Math.random() * visibleLinks.length)];
+        if (linkToClick) {
+          try {
+            linkToClick.click();
+            const url = new URL(linkToClick.href, window.location.href);
+            await loadUrl(url.href);
+            document.querySelector('.status').textContent = `Clicked link: ${linkToClick.textContent || linkToClick.href}`;
+            return true;
+          } catch (e) {
+            const clickScript = `
+              document.querySelector('a[href="${linkToClick.href}"]')?.click();
+            `;
+            frame.contentWindow.eval(clickScript);
+            const url = new URL(linkToClick.href, window.location.href);
+            await loadUrl(url.href);
+            return true;
+          }
+        } else {
+          document.querySelector('.status').textContent = 'No suitable links found';
+          return false;
+        }
+      } catch (err) {
+        console.error('Error in findAndClickLink:', err);
+        document.querySelector('.status').textContent = 'Error accessing frame content';
+        return false;
+      }
+    }
+    let autoBrowseInterval = null;
+    let isAutoBrowsing = false;
+    const AUTO_BROWSE_DELAY = 60000;
+    async function toggleAutoBrowse() {
+      isAutoBrowsing = !isAutoBrowsing;
+      startBtn.classList.toggle('active');
+      startBtn.textContent = isAutoBrowsing ? 'Stop Auto-Browse' : 'Start Auto-Browse';
+      if (isAutoBrowsing) {
+        await performAutoBrowse();
+        autoBrowseInterval = setInterval(performAutoBrowse, AUTO_BROWSE_DELAY);
+      } else {
+        clearInterval(autoBrowseInterval);
+      }
+    }
+    async function performAutoBrowse() {
+      if (!isAutoBrowsing) return;
+      try {
+        const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+        if (!frame) return;
+        const links = Array.from(frame.querySelectorAll('a'));
+        const visibleLinks = links.filter(link => {
+          try {
+            const rect = link.getBoundingClientRect();
+            const style = window.getComputedStyle(link);
+            const href = link.href || '';
+            return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden' && !href.includes('javascript:void') && href.trim() !== '';
+          } catch (e) {
+            return false;
+          }
+        });
+        const assetLinks = visibleLinks.filter(link => {
+          const href = link.href.toLowerCase();
+          const text = link.textContent.toLowerCase();
+          return href.includes('asset') || href.includes('url') || href.includes('public') || text.includes('asset') || text.includes('url') || text.includes('public');
+        });
+        const linkToClick = assetLinks.length > 0 ? assetLinks[Math.floor(Math.random() * assetLinks.length)] : visibleLinks[Math.floor(Math.random() * visibleLinks.length)];
+        if (linkToClick) {
+          try {
+            const url = new URL(linkToClick.href);
+            await loadUrl(url.href);
+            status.textContent = `Auto-browsed to: ${linkToClick.textContent || linkToClick.href}`;
+          } catch (e) {
+            console.error('Auto-browse click error:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Auto-browse error:', err);
+      }
+    }
+    function saveToLocalStorage(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (e) {
+        console.error('Error saving to localStorage:', e);
+      }
+    }
+    function getFromLocalStorage(key) {
+      try {
+        return JSON.parse(localStorage.getItem(key) || '[]');
+      } catch (e) {
+        console.error('Error reading from localStorage:', e);
+        return [];
+      }
+    }
+    async function downloadCurrentPage() {
+      try {
+        const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+        const content = frame.documentElement.outerHTML;
+        const blob = new Blob([content], {
+          type: 'text/html'
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `page-${Date.now()}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        const notification = document.querySelector('.download-notification');
+        notification.style.display = 'block';
+        setTimeout(() => notification.style.display = 'none', 2000);
+      } catch (e) {
+        console.error('Error downloading page:', e);
+      }
+    }
+    function bookmarkCurrentPage() {
+      try {
+        const bookmarks = getFromLocalStorage('bookmarks');
+        bookmarks.push({
+          url: currentUrl,
+          title: proxyFrame.contentDocument?.title || currentUrl,
+          date: new Date().toISOString()
+        });
+        saveToLocalStorage('bookmarks', bookmarks);
+        const notification = document.querySelector('.bookmark-notification');
+        notification.style.display = 'block';
+        setTimeout(() => notification.style.display = 'none', 2000);
+      } catch (e) {
+        console.error('Error bookmarking page:', e);
+      }
+    }
+    async function searchUrlsForText(searchText) {
+      try {
+        const wikipediaMatch = searchText.toLowerCase().match(/(.*?)\s+wikipedia/);
+        const weatherMatch = searchText.toLowerCase().match(/(.*?)\s+weather\.com/);
+        let searchUrl;
+        if (wikipediaMatch) {
+          const term = wikipediaMatch[1].trim();
+          searchUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(term.replace(/\s+/g, '_'))}`;
+        } else if (weatherMatch) {
+          const location = weatherMatch[1].trim();
+          searchUrl = `https://weather.com/weather/today/l/${encodeURIComponent(location)}`;
+        } else {
+          searchUrl = `https://www.google.com/search?q=${encodeURIComponent(searchText)}`;
+        }
+        await loadUrl(searchUrl);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+        if (!frame) {
+          status.textContent = 'Frame not accessible';
+          return;
+        }
+        const links = Array.from(frame.querySelectorAll('a'));
+        const matchingLinks = links.filter(link => {
+          const url = link.href.toLowerCase();
+          const text = link.textContent.toLowerCase();
+          const search = searchText.toLowerCase();
+          return url.includes(search) || text.includes(search);
+        });
+        if (matchingLinks.length > 0) {
+          const bestMatch = matchingLinks.reduce((best, current) => {
+            const relevance = calculateRelevance(current.textContent + current.href, searchText);
+            return relevance > best.relevance ? {
+              link: current,
+              relevance
+            } : best;
+          }, {
+            link: matchingLinks[0],
+            relevance: 0
+          });
+          try {
+            const url = new URL(bestMatch.link.href, window.location.href);
+            await loadUrl(url.href);
+            status.textContent = `Found and loaded: ${bestMatch.link.textContent}`;
+          } catch (e) {
+            status.textContent = 'Error navigating to found link';
+          }
+        } else {
+          status.textContent = 'No matching links found';
+        }
+      } catch (err) {
+        console.error('Error searching URLs:', err);
+        status.textContent = 'Error searching page content';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      const status = document.querySelector('.status');
+      const urlInput = document.querySelector('.url-input');
+      const proxyFrame = document.querySelector('.proxy-frame');
+      const progress = document.querySelector('.progress');
+      const interactBtn = document.getElementById('interactBtn');
+      const reloadBtn = document.getElementById('reloadBtn');
+      const scriptBtn = document.getElementById('scriptBtn');
+      const backBtn = document.getElementById('backBtn');
+      const forwardBtn = document.getElementById('forwardBtn');
+      const customScript = document.querySelector('.custom-script');
+      const historyContainer = document.querySelector('.history-container');
+      const aiPromptBtn = document.getElementById('aiPromptBtn');
+      const typePromptBtn = document.getElementById('typePromptBtn');
+      const promptInput = document.querySelector('.prompt-input');
+      const promptInputContainer = document.querySelector('.prompt-input-container');
+      const executePromptBtn = document.getElementById('executePromptBtn');
+      const clickLinkBtn = document.getElementById('clickLinkBtn');
+      const startBtn = document.getElementById('startBtn');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const bookmarkBtn = document.getElementById('bookmarkBtn');
+      let currentUrl = '';
+      let interactionEnabled = false;
+      let navigationHistory = [];
+      let currentHistoryIndex = -1;
+      startBtn.addEventListener('click', toggleAutoBrowse);
+      function updateHistory() {
+        historyContainer.innerHTML = navigationHistory.map((url, index) => `
+          <div class="history-item ${index === currentHistoryIndex ? 'active' : ''}"
+               onclick="window.loadHistoryUrl(${index})">
+            ${url}
+          </div>
+        `).join('');
+      }
+      window.loadHistoryUrl = async index => {
+        currentHistoryIndex = index;
+        await loadUrl(navigationHistory[index]);
+        updateHistory();
+      };
+      async function loadUrl(url, addToHistory = true) {
+        try {
+          currentUrl = url;
+          if (addToHistory) {
+            if (currentHistoryIndex < navigationHistory.length - 1) {
+              navigationHistory = navigationHistory.slice(0, currentHistoryIndex + 1);
+            }
+            navigationHistory.push(url);
+            currentHistoryIndex = navigationHistory.length - 1;
+            updateHistory();
+          }
+          progress.classList.add('animate-progress');
+          status.textContent = 'Loading URL...';
+          urlInput.value = url;
+          const content = await attemptLoad(url);
+          if (content) {
+            progress.classList.remove('animate-progress');
+            status.textContent = 'URL loaded successfully!';
+            setupFrame(content, url);
+            interactionEnabled = true;
+            document.querySelector('.interaction-overlay').style.display = 'none';
+            interactBtn.textContent = 'Disable Interaction';
+          }
+        } catch (error) {
+          console.error('Loading error:', error);
+          progress.classList.remove('animate-progress');
+          status.textContent = 'Loading failed. Please try another URL.';
+        }
+      }
+      backBtn.addEventListener('click', () => {
+        if (currentHistoryIndex > 0) {
+          currentHistoryIndex--;
+          loadUrl(navigationHistory[currentHistoryIndex], false);
+          updateHistory();
+        }
+      });
+      forwardBtn.addEventListener('click', () => {
+        if (currentHistoryIndex < navigationHistory.length - 1) {
+          currentHistoryIndex++;
+          loadUrl(navigationHistory[currentHistoryIndex], false);
+          updateHistory();
+        }
+      });
+      interactBtn.addEventListener('click', () => {
+        interactionEnabled = !interactionEnabled;
+        document.querySelector('.interaction-overlay').style.display = interactionEnabled ? 'none' : 'block';
+        interactBtn.textContent = interactionEnabled ? 'Disable Interaction' : 'Enable Interaction';
+      });
+      reloadBtn.addEventListener('click', async () => {
+        if (currentUrl) {
+          loadUrl(currentUrl, false);
+        }
+      });
+      scriptBtn.addEventListener('click', () => {
+        customScript.style.display = customScript.style.display === 'none' ? 'block' : 'none';
+      });
+      customScript.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && e.ctrlKey) {
+          const script = customScript.value;
+          proxyFrame.contentWindow.postMessage({
+            type: 'customScript',
+            script
+          }, '*');
+        }
+      });
+      urlInput.addEventListener('keypress', async e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          let url = urlInput.value;
+          if (!url) {
+            status.textContent = 'Please enter a website name or URL';
+            return;
+          }
+          try {
+            url = normalizeUrl(url);
+            new URL(url);
+            await loadUrl(url);
+          } catch (error) {
+            status.textContent = 'Invalid website name or URL format';
+            progress.classList.remove('animate-progress');
+          }
+        }
+      });
+      const searchPromptBtn = document.getElementById('searchPromptBtn');
+      searchPromptBtn.addEventListener('click', async () => {
+        const searchTerm = prompt("What would you like to search for?");
+        if (!searchTerm) return;
+        try {
+          urlInput.value = searchTerm;
+          urlInput.dispatchEvent(new KeyboardEvent('keypress', {
+            key: 'Enter'
+          }));
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+          if (!frame) {
+            status.textContent = 'Unable to access frame content';
+            return;
+          }
+          const links = Array.from(frame.querySelectorAll('a')).filter(link => {
+            try {
+              const rect = link.getBoundingClientRect();
+              const style = window.getComputedStyle(link);
+              return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+            } catch (e) {
+              return false;
+            }
+          });
+          if (links.length > 0) {
+            const randomIndex = Math.floor(Math.random() * links.length);
+            const selectedLink = links[randomIndex];
+            try {
+              selectedLink.click();
+              status.textContent = `Clicked: ${selectedLink.textContent || 'link'}`;
+              interactionEnabled = true;
+              document.querySelector('.interaction-overlay').style.display = 'none';
+            } catch (e) {
+              status.textContent = 'Error clicking link';
+              console.error('Click error:', e);
+            }
+          } else {
+            status.textContent = 'No clickable links found';
+          }
+        } catch (err) {
+          console.error('Error in search prompt handling:', err);
+          status.textContent = 'Error performing search and click';
+        }
+      });
+      const randomSearchBtn = document.getElementById('randomSearchBtn');
+      randomSearchBtn.addEventListener('click', async () => {
+        const {
+          searchTerm,
+          linkText
+        } = await getRandomSearchAndClick();
+        urlInput.value = searchTerm;
+        urlInput.dispatchEvent(new KeyboardEvent('keypress', {
+          key: 'Enter'
+        }));
+        setTimeout(async () => {
+          const analysis = await captureAndAnalyzeFrame();
+          if (analysis) {
+            try {
+              const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+              const links = Array.from(frame.querySelectorAll('a'));
+              const visibleLinks = links.filter(link => {
+                const rect = link.getBoundingClientRect();
+                const style = window.getComputedStyle(link);
+                return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+              });
+              if (visibleLinks.length > 0) {
+                const bestLink = visibleLinks.reduce((best, current) => {
+                  const relevance = calculateRelevance(current.textContent, analysis.suggestedClick);
+                  return relevance > best.relevance ? {
+                    link: current,
+                    relevance
+                  } : best;
+                }, {
+                  link: visibleLinks[0],
+                  relevance: 0
+                });
+                bestLink.link.click();
+                status.textContent = `Analyzed page and clicked: ${bestLink.link.textContent}`;
+                interactionEnabled = true;
+                document.querySelector('.interaction-overlay').style.display = 'none';
+                interactBtn.textContent = 'Disable Interaction';
+              }
+            } catch (err) {
+              console.error('Error clicking analyzed link:', err);
+            }
+          }
+        }, 2000);
+      });
+      clickLinkBtn.addEventListener('click', async () => {
+        await findAndClickLink(proxyFrame);
+      });
+      async function executeCustomPrompt(promptText) {
+        try {
+          const searches = promptText.split(',').map(s => s.trim());
+          for (let search of searches) {
+            const wikipediaMatch = search.toLowerCase().match(/(.*?)\s+wikipedia/);
+            if (wikipediaMatch) {
+              const term = wikipediaMatch[1].trim();
+              const wikiUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(term.replace(/\s+/g, '_'))}`;
+              await loadUrl(wikiUrl);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              await findAndClickLink(proxyFrame);
+              continue;
+            }
+            await searchUrlsForText(search);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await findAndClickLink(proxyFrame);
+          }
+          status.textContent = 'Completed executing searches';
+        } catch (err) {
+          console.error('Error executing searches:', err);
+          status.textContent = 'Error executing searches';
+        }
+      }
+      async function searchUrlsForText(text) {
+        try {
+          const wikipediaMatch = text.toLowerCase().match(/(.*?)\s+wikipedia/);
+          const weatherMatch = text.toLowerCase().match(/(.*?)\s+weather\.com/);
+          let searchUrl;
+          if (wikipediaMatch) {
+            const term = wikipediaMatch[1].trim();
+            searchUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(term.replace(/\s+/g, '_'))}`;
+          } else if (weatherMatch) {
+            const location = weatherMatch[1].trim();
+            searchUrl = `https://weather.com/weather/today/l/${encodeURIComponent(location)}`;
+          } else {
+            searchUrl = `https://www.google.com/search?q=${encodeURIComponent(text)}`;
+          }
+          await loadUrl(searchUrl);
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+          if (!frame) {
+            status.textContent = 'Frame not accessible';
+            return;
+          }
+          await findAndClickLink(proxyFrame);
+        } catch (err) {
+          console.error('Error searching URLs:', err);
+          status.textContent = 'Error searching page content';
+        }
+      }
+      aiPromptBtn.addEventListener('click', async () => {
+        const prompt = await generateAIPrompt();
+        if (!prompt) {
+          status.textContent = 'Failed to generate AI prompt';
+          return;
+        }
+        status.textContent = `Executing prompt: ${prompt.prompt}`;
+        const analysis = await analyzeInstruction(prompt.prompt);
+        if (!analysis) {
+          status.textContent = 'Failed to analyze prompt';
+          return;
+        }
+        for (const action of analysis.actions) {
+          if (action.type === 'search') {
+            urlInput.value = action.value;
+            urlInput.dispatchEvent(new KeyboardEvent('keypress', {
+              key: 'Enter'
+            }));
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          } else if (action.type === 'click') {
+            const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+            if (!frame) continue;
+            const analysis = await captureAndAnalyzeFrame();
+            if (analysis) {
+              const links = Array.from(frame.querySelectorAll('a'));
+              const visibleLinks = links.filter(link => {
+                const rect = link.getBoundingClientRect();
+                const style = window.getComputedStyle(link);
+                return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+              });
+              if (visibleLinks.length > 0) {
+                const bestLink = visibleLinks.reduce((best, current) => {
+                  const relevance = calculateRelevance(current.textContent, action.value);
+                  return relevance > best.relevance ? {
+                    link: current,
+                    relevance
+                  } : best;
+                }, {
+                  link: visibleLinks[0],
+                  relevance: 0
+                });
+                bestLink.link.click();
+                await new Promise(resolve => setTimeout(resolve, 2000));
+              }
+            }
+          }
+        }
+        status.textContent = 'Completed executing AI prompt';
+      });
+      typePromptBtn.addEventListener('click', () => {
+        promptInputContainer.style.display = promptInputContainer.style.display === 'none' ? 'block' : 'none';
+      });
+      executePromptBtn.addEventListener('click', async () => {
+        const promptText = promptInput.value;
+        if (!promptText) return;
+        await executeCustomPrompt(promptText);
+        promptInput.value = '';
+      });
+      promptInput.addEventListener('keypress', e => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          executePromptBtn.click();
+        }
+      });
+      downloadBtn.addEventListener('click', downloadCurrentPage);
+      bookmarkBtn.addEventListener('click', bookmarkCurrentPage);
+      async function downloadCurrentPage() {}
+      function bookmarkCurrentPage() {}
+      async function attemptLoad(url) {
+        const methods = [async () => {
+          const response = await fetch(url);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://cors.bridged.cc/${url}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${url}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://cors-anywhere.herokuapp.com/${url}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://api.corsio.com/${url}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://thingproxy.freeboard.io/fetch/${url}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://api.scrapingant.com/v2/general?url=${encodeURIComponent(url)}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }, async () => {
+          const proxyUrl = `https://proxy.scrapeops.io/v1/?url=${encodeURIComponent(url)}`;
+          const response = await fetch(proxyUrl);
+          return await response.text();
+        }];
+        for (let method of methods) {
+          try {
+            return await method();
+          } catch (error) {
+            console.log('Method failed, trying next...');
+            continue;
+          }
+        }
+        throw new Error('All loading methods failed');
+      }
+      function modifyContent(content, url) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
+        const elementsWithUrls = doc.querySelectorAll('[src], [href], [srcset], [data-src], [data-srcset]');
+        elementsWithUrls.forEach(element => {
+          ['src', 'href', 'srcset', 'data-src', 'data-srcset'].forEach(attr => {
+            if (element.hasAttribute(attr)) {
+              try {
+                const value = element.getAttribute(attr);
+                if (attr === 'srcset') {
+                  const newSrcSet = value.split(',').map(src => {
+                    const [url, size] = src.trim().split(' ');
+                    return `${new URL(url, baseUrl).href} ${size || ''}`;
+                  }).join(', ');
+                  element.setAttribute(attr, newSrcSet);
+                } else {
+                  element.setAttribute(attr, new URL(value, baseUrl).href);
+                }
+              } catch (e) {
+                console.log(`Invalid URL in ${attr}:`, element.getAttribute(attr));
+              }
+            }
+          });
+        });
+        const styleElements = doc.querySelectorAll('style');
+        styleElements.forEach(style => {
+          let cssText = style.textContent;
+          cssText = cssText.replace(/url\(['"]?([^'")\s]+)['"]?\)/g, (match, url) => {
+            try {
+              return `url('${new URL(url, baseUrl).href}')`;
+            } catch (e) {
+              return match;
+            }
+          });
+          style.textContent = cssText;
+        });
+        const clickableElements = doc.querySelectorAll('a, button, [onclick], [role="button"]');
+        clickableElements.forEach(element => {
+          const originalOnClick = element.getAttribute('onclick');
+          element.setAttribute('data-original-onclick', originalOnClick || '');
+          if (element.tagName === 'A' && element.href) {
+            try {
+              const absoluteUrl = new URL(element.href, baseUrl).href;
+              element.setAttribute('data-original-href', absoluteUrl);
+              element.href = '#';
+              element.setAttribute('onclick', `parent.postMessage({type: 'navigation', url: '${absoluteUrl}'}, '*')`);
+            } catch (e) {
+              console.log('Invalid URL:', element.href);
+            }
+          } else {
+            element.setAttribute('onclick', `
+              parent.postMessage({
+                type: 'click',
+                originalOnClick: this.getAttribute('data-original-onclick'),
+                elementInfo: {
+                  tagName: this.tagName,
+                  id: this.id,
+                  className: this.className
+                }
+              }, '*');
+              ${originalOnClick || ''}
+            `);
+          }
+        });
+        doc.querySelectorAll('form').forEach(form => {
+          const originalAction = form.action;
+          form.setAttribute('data-original-action', originalAction);
+          form.setAttribute('onsubmit', `
+              event.preventDefault();
+              const formData = new FormData(this);
+              const url = new URL(this.getAttribute('data-original-action'));
+              for (let pair of formData.entries()) {
+                  url.searchParams.append(pair[0], pair[1]);
+              }
+              parent.postMessage({type: 'navigation', url: url.toString()}, '*');
+          `);
+        });
+        return doc.documentElement.outerHTML;
+      }
+      function setupFrame(content, url) {
+        const modifiedContent = modifyContent(content, url);
+        const baseTag = `<base href="${url}">`;
+        const modifiedContentWithBase = modifiedContent.replace('<head>', '<head>' + baseTag);
+        const blob = new Blob([modifiedContentWithBase], {
+          type: 'text/html'
+        });
+        const blobUrl = URL.createObjectURL(blob);
+        proxyFrame.src = blobUrl;
+        proxyFrame.onload = () => {
+          try {
+            const frameDoc = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+            const script = frameDoc.createElement('script');
+            script.textContent = `
+              window.addEventListener('message', function(e) {
+                if (e.data.type === 'customScript') {
+                  try {
+                    eval(e.data.script);
+                  } catch (error) {
+                    parent.postMessage({type: 'error', message: error.toString()}, '*');
+                  }
+                } else if (e.data.type === 'aiAction') {
+                  try {
+                    const action = e.data.action;
+                    if (action.type === 'click') {
+                      document.querySelector(action.selector)?.click();
+                    } else if (action.type === 'input') {
+                      const elem = document.querySelector(action.selector);
+                      if (elem) {
+                        elem.value = action.value;
+                        elem.dispatchEvent(new Event('input'));
+                      }
+                    }
+                  } catch (error) {
+                    parent.postMessage({type: 'error', message: error.toString()}, '*');
+                  }
+                }
+              });
+    
+              // Add deep navigation handler
+              document.body.addEventListener('click', function(e) {
+                  const closest = e.target.closest('a');
+                  if (closest && closest.href) {
+                      e.preventDefault();
+                      try {
+                          const url = new URL(closest.href, window.location.href);
+                          parent.postMessage({type: 'navigation', url: url.href}, '*');
+                      } catch (e) {
+                          console.error('Navigation error:', e);
+                      }
+                  }
+              }, true);
+            `;
+            frameDoc.body.appendChild(script);
+            const clickInterceptScript = `
+              document.body.addEventListener('click', function(e) {
+                const closest = e.target.closest('a');
+                if (closest && closest.href) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    const url = new URL(closest.href, window.location.href);
+                    parent.postMessage({
+                      type: 'navigation', 
+                      url: url.href
+                    }, '*');
+                  } catch (err) {
+                    console.error('Click intercept error:', err);
+                  }
+                }
+              }, true);
+            `;
+            script.textContent += clickInterceptScript;
+          } catch (e) {
+            console.log('Frame access restricted due to CORS');
+          }
+        };
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+      }
+      window.addEventListener('message', async e => {
+        if (e.data.type === 'error') {
+          status.textContent = `Script Error: ${e.data.message}`;
+        } else if (e.data.type === 'navigation') {
+          try {
+            const url = new URL(e.data.url, window.location.href);
+            await loadUrl(url.href);
+          } catch (err) {
+            console.error('Navigation error:', err);
+            status.textContent = 'Error navigating to link';
+          }
+        } else if (e.data.type === 'click') {
+          try {
+            if (e.data.originalOnClick) {
+              proxyFrame.contentWindow.eval(e.data.originalOnClick);
+            }
+            status.textContent = `Clicked: ${e.data.elementInfo.tagName} ${e.data.elementInfo.id || e.data.elementInfo.className || ''}`;
+          } catch (error) {
+            status.textContent = `Click handler error: ${error.message}`;
+            try {
+              const selector = e.data.elementInfo.id ? `#${e.data.elementInfo.id}` : `.${e.data.elementInfo.className}`;
+              proxyFrame.contentWindow.eval(`
+                document.querySelector('${selector}')?.click();
+              `);
+            } catch (err) {
+              console.error('Fallback click failed:', err);
+            }
+          }
+        }
+      });
+      function calculateRelevance(text, query) {
+        if (!text || !query) return 0;
+        text = text.toLowerCase();
+        query = query.toLowerCase();
+        let assetBonus = 0;
+        if (text.includes('asset') || text.includes('url') || text.includes('public')) {
+          assetBonus = 0.3;
+        }
+        if (text === query) return 1 + assetBonus;
+        if (text.includes(query)) return 0.9 + assetBonus;
+        const textWords = text.split(/\s+/);
+        const queryWords = query.split(/\s+/);
+        let matches = 0;
+        let positionBonus = 0;
+        for (let i = 0; i < queryWords.length; i++) {
+          const queryWord = queryWords[i];
+          for (let j = 0; j < textWords.length; j++) {
+            const textWord = textWords[j];
+            if (textWord.includes(queryWord) || queryWord.includes(textWord)) {
+              matches++;
+              positionBonus += (textWords.length - j) / textWords.length;
+            }
+          }
+        }
+        const matchScore = matches / queryWords.length;
+        const finalScore = matchScore * (1 + positionBonus / queryWords.length) + assetBonus;
+        return Math.min(finalScore, 1);
+      }
+      function normalizeUrl(input) {
+        const wikipediaMatch = input.toLowerCase().match(/(.*?)\s+wikipedia/);
+        if (wikipediaMatch) {
+          const term = wikipediaMatch[1].trim();
+          return `https://en.wikipedia.org/wiki/${encodeURIComponent(term.replace(/\s+/g, '_'))}`;
+        }
+        const weatherMatch = input.toLowerCase().match(/(.*?)\s+weather\.com/);
+        if (weatherMatch) {
+          const location = weatherMatch[1].trim();
+          return `https://weather.com/weather/today/l/${encodeURIComponent(location)}`;
+        }
+        if (!input.match(/^https?:\/\//i)) {
+          if (input.includes('.')) {
+            return `https://${input}`;
+          } else {
+            return `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+          }
+        }
+        return input;
+      }
+      function parseQuotedSearchTerms(instruction) {
+        const matches = instruction.match(/"([^"]*)"/g) || [];
+        return matches.map(term => term.replace(/"/g, ''));
+      }
+      async function captureAndAnalyzeFrame() {
+        try {
+          const frame = proxyFrame.contentDocument || proxyFrame.contentWindow.document;
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const html2canvas = (await import('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js')).default;
+          const screenshot = await html2canvas(frame.body);
+          canvas.width = screenshot.width;
+          canvas.height = screenshot.height;
+          ctx.drawImage(screenshot, 0, 0);
+          const imageData = canvas.toDataURL('image/png');
+          const analysis = await analyzeScreenshot(imageData);
+          return analysis;
+        } catch (err) {
+          console.error('Error capturing frame:', err);
+          return null;
+        }
+      }
+      async function analyzeScreenshot(imageData) {
+        try {
+          const response = await fetch('/api/ai_completion', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              prompt: `Analyze this screenshot and describe the content and any relevant links that should be clicked.
+              Consider the current context and user's previous actions to suggest the most relevant link.
+              
+              <typescript-interface>
+              interface Response {
+                description: string;
+                relevantLinks: string[];
+                suggestedClick: string;
+                confidence: number;
+              }
+              </typescript-interface>
+              
+              <example>
+              {
+                "description": "Search results page showing various articles about cats",
+                "relevantLinks": ["Complete Guide to Cat Breeds", "Cat Care Tips", "Cat Photos"],
+                "suggestedClick": "Complete Guide to Cat Breeds",
+                "confidence": 0.85
+              }
+              </example>`,
+              data: imageData
+            })
+          });
+          return await response.json();
+        } catch (err) {
+          console.error('Error analyzing screenshot:', err);
+          return null;
+        }
+      }
+      async function generateAIPrompt() {
+        try {
+          const response = await fetch('/api/ai_completion', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              prompt: `Generate a random web interaction prompt.
+              
+              <typescript-interface>
+              interface Response {
+                prompt: string;
+                expectedActions: string[];
+              }
+              </typescript-interface>
+              
+              <example>
+              {
+                "prompt": "Search for flower shops and click on the best rated one",
+                "expectedActions": ["search", "analyze", "click"]
+              }
+              </example>`,
+              data: ""
+            })
+          });
+          return await response.json();
+        } catch (err) {
+          console.error('Error generating AI prompt:', err);
+          return null;
+        }
+      }
+    });</script>
+    </body></html>
